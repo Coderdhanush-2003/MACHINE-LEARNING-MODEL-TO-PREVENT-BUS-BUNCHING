@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Bus Bunching</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width:device-width; initial-scale=1.0">
+	<link rel="shortcut icon" type="image/x-icon" href="img/favicon.png">
+	<link rel="stylesheet" type="text/css" href="css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="css/main.css">
+	
+  <link rel="stylesheet" href="https://libs.cartocdn.com/cartodb.js/v3/3.15/themes/css/cartodb.css" />
+
+</head>
+<body> 
+
+<!-- Navbar Section Start -->
+<nav class="navbar navbar-dark navbar-expand-lg"  uk-sticky="top:100; animation: uk-animation-slide-top; bottom: #sticky-on-scroll-up">
+  <div class="container">
+    <a href="index.html" class="navbar-brand">
+      <img src="img/logo1.png" class="img-fluid p-0" style="width: 35%; filter: brightness(0) invert(1);">
+      <div class="ml-2 p-0 d-inline webT">Bus Bunching</div>
+    </a>
+    <button class="navbar-toggler navbar-toggler-right" data-toggle="collapse" data-target="#navBar">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navBar">
+      <ul class="navbar-nav  ml-auto ">
+
+        <li class="nav-item">
+          <a class="nav-link " href="index.html">Home</a>
+        </li>
+        <li class="nav-item ">
+          <a class="nav-link" href="Abstract.html">Abstract</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="Data Process.html">Data Process</a>
+        </li>
+        <li class="nav-item ">
+          <a class="nav-link" href="Analysis Graph.html">Analysis Graph</a>
+        </li>
+        <li class="nav-item active">
+          <a class="nav-link" href="Analysis_Maps.html">Analysis Maps</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<!-- Nav Section End -->
+
+ <!-- Contact Section Start -->
+ <section id="contact" class="text-center py-5 text-light">
+  <div class="inner-overlay">
+    <div class="container">
+      <div class="row">
+        <div class="col mt-5 pt-4">
+          <h1 class="text-light"  style="font-family: serif;">Bunching Timelapse Heatmap</h1 >
+          <p class="lead"  style="font-style: italic; font-family: serif; font-size:x-large;">
+            To see this all in motion, click the "play" button below to see a time lapse of the occurrences of bunching. The timelapse map below shows data for March 1 - 27, 2016 aggregated into a single day.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+<!-- Contact Section End -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <h1 style="text-align: center ; margin: 20px 20px;">Map</h1>
+  <div id="map"></div>
+
+  <p style="text-align: justify; margin: 20px 20px;" >The heatmap shows spatial frequency of bunching. Since more buses are in operation during rush hour, everything else being equal one would expect to observe more bunching during rush hour (simply by virtue of there being more buses which could bunch).The timelapse heatmap shows that downtown, Oakland, and the intersection of Murray and Forbes in Squirrel Hill are persistent hot spots for bunching. The movement of bunches through time illustrate that bunches snowball and persist. As above, routes P1 and G2 show comparatively infrequent bunching.What can be done to reduce the waiting and overcrowding caused by bus bunching in Pittsburgh? The evidence above suggests that one possible solution would be to create new Bus Rapid Transit lines, especially connecting Downtown, Oakland, and Squirrel Hill. A coalition of community partners are advocating for just that. Learn more about Bus Rapid Transit and their efforts by visiting <a href="http://gettherepgh.org/">www.GetTherePgh.org</a>
+  
+ 
+
+
+  <script src="js/d3.v3.min.js"></script>
+  
+  <script type="text/javascript">
+    // add routes to select dropdown
+    var routes = ["61A", "61B", "61C", "61D", "71A", "71B", "71C", "71D", "P1", "G2"];
+    var select = d3.select("#rt");
+        
+    select.selectAll("option")
+        .data(routes)
+      .enter()
+        .append("option")
+        .attr("value", function(d) { return d; })
+        .text(function(d) { return d; })
+        .property("selected", function(d) { return d === "61C"; } );
+
+    var data;
+    var landmarks;
+
+    var xSize = 6, // dimensions of tiles
+        ySize = 6;
+
+    var rowVals;
+    var distMax;
+
+    var margin = { top: 80, right: 0, bottom: 50, left: 100 },
+        width = 750 - margin.left - margin.right,
+        height = 585 - margin.top - margin.bottom;
+
+    var svg = d3.select("#chart").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        //.style("margin-left", -margin.left + "px")
+      .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");  
+
+    var segToTime = function(timeSeg) {
+        var h = Math.floor(timeSeg/6),
+            m = (timeSeg - h*6)*10,
+            meridian = (h < 12) ? "am" : "pm";
+        m = (m < 10) ? ("0" + m) : m;
+        h = (h<=12) ? h : (h - 12);
+        return h +  ":" + m  + " " + meridian;
+    }
+
+    var colVals = d3.range(36, 36*4, 3); // create range of times
+    
+    var timeLabels = svg.selectAll(".timeLabel")
+        .data(colVals, function(d) { return(d); } );
+
+    timeLabels.enter().append("text")
+        .text(function (d) { return segToTime(d); })
+        .attr("transform", function(d, i) { return "translate(" + ((d - 35) * xSize) + ", -12)rotate(-90)"; })
+        .attr("dy", ".1em")
+        .style("text-anchor", "start")
+        .attr("class", "timeLabel");
+
+    var colorScale = d3.scale.linear()
+      .domain([0, 1])
+      .range(["white", "red"]);
+
+    function loadData(rt, dir) {
+        var tsvFile = "data/mean-depart-" + dir + "-" + rt + "-tsv.txt";
+        d3.tsv(tsvFile,
+                function(d) {
+                  return {
+                    distance: +d.distance,
+                    time: +d.time,
+                    value: +d.value,
+                  };
+                },
+                function(error, tsvData) {
+                  if (error) return console.warn(error);
+                  data = tsvData;
+                  heatmapChart(rt, dir);
+                } 
+        );
+    }
+    
+    function heatmapChart(rt, dir) {
+      distMax = d3.max(data, function(d) { return d.distance; });
+
+      height = (distMax * 6);// - margin.top - margin.bottom;
+
+      d3.select("svg").attr("height", height + margin.top); // + margin.bottom);
+      
+      rowVals = new Array(distMax);  
+      // fill in the appropriate array elements with landmark names
+      for (var i = 0; i < landmarks.length; i++) {
+        var obj = landmarks[i];
+        if(obj.route==rt && obj.rtdir==dir) {
+          //console.log(obj.rtdir + obj.HOOD + obj.first_occ);
+          rowVals[obj.first_occ] = obj.HOOD;
+
+        }
+      }
+          
+      var distLabels = svg.selectAll(".distLabel")
+          .data(rowVals, function(d, i) { return d + ":" + i; } );
+          
+      distLabels.enter().append("text")
+          .text(function (d, i) { return d; })
+          .attr("x", -6)
+          .attr("y", function(d,i) { return (i * ySize); })
+          .attr("dy", "-.1em")
+          .attr("text-anchor", "end")
+          .attr("class", "distLabel");
+
+
+      distLabels.exit().remove();
+
+      // update
+      var cards = svg.selectAll(".tile")
+          //.data(data, function(d) { return d.distance + ':' + d.time; })
+          .data(data, function(d) { return d.distance + ':' + d.time; });
+
+      // enter
+      cards.enter().append("rect")
+          .attr("x", function(d) { return (d.time - 36) * xSize; })
+          .attr("y", function(d) { return (d.distance - 1) * ySize; })
+          .attr("class", "tile")
+          .attr("width", xSize)
+          .attr("height", ySize)
+          .style("fill", "white");
+
+      cards.transition().duration(1000)
+          .style("fill", function(d) { return colorScale(d.value); });
+      
+      // exit
+      cards.exit().remove();
+    }
+
+    // load landmarks data, then fire up main viz
+    d3.json("data/landmarks.json", function(response) { 
+      landmarks = response;
+      loadData('61C', 'outbound');
+    });
+
+    function switchRoute(rt, dir) {
+      d3.select("#rt").property("value", rt);
+      d3.select('input[name="dir"]:checked').node().value
+    }
+    // when the user form is updated, fire the appropriate update
+    function updateChart(rt, dir) { 
+        if (typeof rt === 'undefined')
+          rt = d3.select("#rt").property('value');
+        else
+          d3.select("#rt").property("value", rt);
+        if (typeof dir === 'undefined')
+          dir = d3.select('input[name="dir"]:checked').node().value;
+        else
+          d3.select("#" + dir).property("checked", true);
+        //console.log("d3 method: " + rt + " " + dir)
+        loadData(rt, dir); 
+    }
+
+    d3.select("#rt").on("change", function() { updateChart(); });
+    d3.selectAll("input[name='dir']").on("change", function() { updateChart(); });
+
+    // to do: configure pre-caching for files.
+  </script>
+
+  <!-- include cartodb.js library -->
+  <script src="https://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.js"></script>
+
+  <script>
+    cartodb.createVis('map', "https://markegge.cartodb.com/api/v2/viz/ad750b84-fddb-11e5-918e-0ea31932ec1d/viz.json")
+      .done(function(vis, layers) {
+        //First layer is the basemap, the second is the Torque layer
+        torqueLayer = layers[2];
+        torqueLayer.pause();
+      })
+      .error(function(err) {
+        console.log(err);
+      });
+
+  </script>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-5917749-4', 'auto');
+    ga('require', 'linkid');
+    ga('send', 'pageview');
+  </script>
+
+
+
+
+<!-- Footer Section Start -->
+<footer id="footer" class="py-3 text-center text-light">
+  <div class="container">
+    <div class="row">
+      <div class="col">
+        <h2 class="display-5 mb-0 text-light">Bus Bunching</h2>
+        <div class="d-flex flex-row justify-content-center p-3">
+          <div class="px-5">
+           
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        Busbunching.com © 2019 All Rights Reserved by Dhanush
+      </div>
+    </div>
+  </div>
+</footer>
+  
+</body>
+</html>
