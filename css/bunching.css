@@ -1,0 +1,77 @@
+@import url(//fonts.googleapis.com/css?family=PT+Serif|PT+Serif:b|PT+Serif:i|PT+Sans|PT+Sans:b);
+
+html {
+  min-width: 1040px;
+}
+body {
+  background: #fcfcfa;
+  color: #333;
+  font-family: "PT Serif", serif;
+  margin:  auto auto;
+  position: relative;
+  width: 100%;
+}
+body > p, li > p {
+  line-height: 1.4em;
+}
+/* body > p {
+  width: 720px;
+} */
+a {
+  color: #0033cc;
+}
+a.ui-link {
+    text-decoration: none;
+    border-bottom: 1px dashed #0033cc;
+}
+a.ui-link:hover, a.ui-link:focus {
+    color: #3366ff;
+    text-decoration: none;
+    border-bottom: 1px solid #3366ff;
+}
+
+aside {
+  float: left;
+  margin-right: 1em;
+  margin-top: 12px;
+  font-size: small;
+  right: 0;
+  position: absolute;
+  width: 180px;
+}
+
+
+header, footer,  aside, h1, h2, h3, h4 {
+  font-family: "PT Sans", sans-serif;
+}
+
+header, footer {
+  font-size: small;
+}
+
+svg {
+  font: 10px sans-serif;
+}
+
+footer {
+  margin-top: 40px;
+}
+
+#chart {
+  min-height: 360px;
+}
+
+#map {
+  height: 560px;
+  margin-left: 20%;
+  margin-right: 20%;
+} 
+
+ul.share-buttons{
+  list-style: none;
+  padding: 0;
+}
+
+ul.share-buttons li{
+  display: inline;
+}
